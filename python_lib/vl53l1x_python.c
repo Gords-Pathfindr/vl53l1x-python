@@ -84,14 +84,14 @@ VL53L1_DEV *initialise(uint8_t i2c_address, uint8_t TCA9548A_Device, uint8_t TCA
     Status = VL53L1_StaticInit(dev);
     //if(Status == VL53L1_ERROR_NONE){
         Status = VL53L1_GetDeviceInfo(dev, &DeviceInfo);
-        if(Status == VL53L1_ERROR_NONE){
+        /*if(Status == VL53L1_ERROR_NONE){
             printf("VL53L0X_GetDeviceInfo:\n");
             printf("Device Name : %s\n", DeviceInfo.Name);
             printf("Device Type : %s\n", DeviceInfo.Type);
             printf("Device ID : %s\n", DeviceInfo.ProductId);
             printf("ProductRevisionMajor : %d\n", DeviceInfo.ProductRevisionMajor);
             printf("ProductRevisionMinor : %d\n", DeviceInfo.ProductRevisionMinor);
-        }
+        }*/
     //}
 
     VL53L1_PerformRefSpadManagement(dev);
