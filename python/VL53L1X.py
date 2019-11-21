@@ -237,11 +237,12 @@ class VL53L1X:
         Returns the full RangingMeasurementData structure.
         (it ignores the fields that are not implemented according to en.DM00474730.pdf)
         '''
-        return { 'StreamCount':_getRangingMeasurementData(self._dev).contents.StreamCount,
-                 'SignalRateRtnMegaCps':_getRangingMeasurementData(self._dev).contents.SignalRateRtnMegaCps/65536,
-                 'AmbientRateRtnMegaCps':_getRangingMeasurementData(self._dev).contents.AmbientRateRtnMegaCps/65536,
-                 'EffectiveSpadRtnCount':_getRangingMeasurementData(self._dev).contents.EffectiveSpadRtnCount/256,
-                 'SigmaMilliMeter':_getRangingMeasurementData(self._dev).contents.SigmaMilliMeter/65536,
-                 'RangeMilliMeter':_getRangingMeasurementData(self._dev).contents.RangeMilliMeter,
-                 'RangeStatus':_getRangingMeasurementData(self._dev).contents.RangeStatus }
+        contents = _getRangingMeasurementData(self._dev).contents
+        return { 'StreamCount': contents.StreamCount,
+                 'SignalRateRtnMegaCps': contents.SignalRateRtnMegaCps/65536,
+                 'AmbientRateRtnMegaCps': contents.AmbientRateRtnMegaCps/65536,
+                 'EffectiveSpadRtnCount': contents.EffectiveSpadRtnCount/256,
+                 'SigmaMilliMeter': contents.SigmaMilliMeter/65536,
+                 'RangeMilliMeter': contents.RangeMilliMeter,
+                 'RangeStatus': contents.RangeStatus }
 
