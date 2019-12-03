@@ -21,7 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ctypes import CDLL, CFUNCTYPE, POINTER, c_int, c_uint, pointer, c_ubyte, c_uint8, c_uint32
+from ctypes import CDLL, CFUNCTYPE, Structure, POINTER, c_int16, c_int, c_uint, pointer, c_ubyte, c_uint8, c_uint16, c_uint32
 from smbus2 import SMBus, i2c_msg
 import os
 import site
@@ -38,6 +38,19 @@ class VL53L1xDistanceMode:
     MEDIUM = 2
     LONG = 3
 
+class VL53L1_RangingMeasurementData_t(Structure):
+    _fields_ = [
+            ('TimeStamp', c_uint32),
+            ('StreamCount', c_uint8),
+            ('RangeQualityLevel', c_uint8),
+            ('SignalRateRtnMegaCps', c_uint32),
+            ('AmbientRateRtnMegaCps', c_uint32),
+            ('EffectiveSpadRtnCount', c_uint16),
+            ('SigmaMilliMeter', c_uint32),
+            ('RangeMilliMeter', c_int16),
+            ('RangeFractionalPart', c_uint8),
+            ('RangeStatus', c_uint8)
+        ]
 
 # Read/write function pointer types.
 _I2C_MULTI_FUNC = CFUNCTYPE(c_int, c_ubyte, c_ubyte)
@@ -63,6 +76,8 @@ for lib_location in _POSSIBLE_LIBRARY_LOCATIONS:
         lib_file = files[0]
         try:
             _TOF_LIBRARY = CDLL(lib_file)
+            _getRangingMeasurementData = _TOF_LIBRARY.getRangingMeasurementData
+            _getRangingMeasurementData.restype = POINTER(VL53L1_RangingMeasurementData_t)
             # print("Using: " + lib_location + "/vl51l1x_python.so")
             break
         except OSError:
@@ -83,7 +98,8 @@ class VL53L1X:
 
         self._i2c = SMBus(i2c_bus)
         try:
-            self._i2c.read_byte_data(self.i2c_address, 0x00)
+            if tca9548a_num == 255:
+                self._i2c.read_byte_data(self.i2c_address, 0x00)
         except IOError:
             raise RuntimeError("VL53L1X not found on adddress: {:02x}".format(self.i2c_address))
 
@@ -214,3 +230,19 @@ class VL53L1X:
         else:
             raise RuntimeError("change_address failed with code: {}".format(status))
         return True
+
+
+    def get_RangingMeasurementData(self):
+        '''
+        Returns the full RangingMeasurementData structure.
+        (it ignores the fields that are not implemented according to en.DM00474730.pdf)
+        '''
+        contents = _getRangingMeasurementData(self._dev).contents
+        return { 'StreamCount': contents.StreamCount,
+                 'SignalRateRtnMegaCps': contents.SignalRateRtnMegaCps/65536,
+                 'AmbientRateRtnMegaCps': contents.AmbientRateRtnMegaCps/65536,
+                 'EffectiveSpadRtnCount': contents.EffectiveSpadRtnCount/256,
+                 'SigmaMilliMeter': contents.SigmaMilliMeter/65536,
+                 'RangeMilliMeter': contents.RangeMilliMeter,
+                 'RangeStatus': contents.RangeStatus }
+

@@ -1,20 +1,22 @@
-# vl53l1x-python
+#!/usr/bin/env python
 
-Python library for the VL53L1X Laser Ranger.
+import time
+import sys
+import signal
 
-https://shop.pimoroni.com/products/vl53l1x-breakout
-
-# Installing
-
-```
-sudo pip install smbus2
-sudo pip install vl53l1x
-```
-
-# Usage
-
-```python
 import VL53L1X
+
+
+print("""distance.py
+
+Display the distance read from the sensor.
+
+Uses the "Short Range" timing budget by default.
+
+Press Ctrl+C to exit.
+
+""")
+
 
 # Open and start the VL53L1X sensor.
 # If you've previously used change-address.py then you
@@ -29,19 +31,29 @@ tof.open()
 # and inter-measurement time in milliseconds.
 # If you uncomment the line below to set a budget you
 # should use `tof.start_ranging(0)`
-# tof.set_timing(66000, 70)
+tof.set_timing(40*1000, 50)
 
-tof.start_ranging(1)  # Start ranging
+tof.start_ranging(0)  # Start ranging
                       # 0 = Unchanged
                       # 1 = Short Range
                       # 2 = Medium Range
                       # 3 = Long Range
 
-# Grab the range in mm, this function will block until
-# a reading is returned.
-distance_in_mm = tof.get_distance()
+running = True
 
-tof.stop_ranging()
-```
 
-See examples for more advanced usage.
+def exit_handler(signal, frame):
+    global running
+    running = False
+    tof.stop_ranging()
+    print()
+    sys.exit(0)
+
+
+# Attach a signal handler to catch SIGINT (Ctrl+C) and exit gracefully
+signal.signal(signal.SIGINT, exit_handler)
+
+while running:
+    RangingMeasurementData = tof.get_RangingMeasurementData()
+    print("RangingMeasurementData: \n{}".format(RangingMeasurementData))
+    time.sleep(50/1000.)
